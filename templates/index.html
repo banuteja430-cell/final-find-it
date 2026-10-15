@@ -1,3 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Data Arena - FindIt</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f}
+.mono{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body class="bg-[#0a0a0f] text-white flex min-h-screen">
+<!-- SIDEBAR -->
+<div class="w-[240px] bg-[#111119] border-r border-[#1f1f2e] fixed h-screen flex flex-col p-5 hidden md:flex">
+<div class="flex items-center gap-3 mb-10">
+<div class="w-8 h-8 bg-[#3b82f6] rounded flex items-center justify-center font-bold text-xs">DA</div>
+<div><div class="font-bold text-xs tracking-widest">THE DATA</div><div class="text-[10px] text-gray-400 tracking-widest">ARENA • FindIt</div></div>
+</div>
+<div class="text-[10px] text-gray-500 tracking-widest mb-3">SECTIONS</div>
+<div class="space-y-1 text-[13px]">
+<div class="bg-[#1c1c2e] px-3 py-2 rounded text-white">01 Overview</div>
+<div class="px-3 py-2 text-gray-400">02 Lost items</div>
+<div class="px-3 py-2 text-gray-400">03 Found items</div>
+<div class="px-3 py-2 text-gray-400">04 Post new</div>
+</div>
+<div class="mt-auto pt-6 border-t border-[#1f1f2e] text-[10px] text-gray-500">
+<p>{{ items|length }} items in view</p>
+</div>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 md:ml-[240px] p-4 md:p-8">
+<div class="mb-6">
+<div class="text-[10px] tracking-[0.2em] text-gray-500">SMART CAMPUS LOST & FOUND INTELLIGENCE</div>
+<h1 class="text-3xl font-bold mt-1">The Data Arena</h1>
+<p class="text-gray-400 text-[13px] mt-2 max-w-2xl">Transforming lost item reports into actionable recovery insights.</p>
+<div class="mt-4 bg-[#facc15]/10 border border-[#facc15]/20 text-[#facc15] text-[11px] px-3 py-2 rounded mono">DEMO - FindIt v1</div>
+</div>
+
+<!-- Filters -->
+<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4 flex flex-wrap gap-3 mb-6">
+<div class="flex items-center gap-2 text-[11px]"><span class="text-gray-500">TYPE</span>
+<select id="fType" onchange="filterItems()" class="bg-[#0a0a0f] border border-[#2a2a3a] rounded px-2 py-1 text-white"><option value="All">All</option><option value="Lost">Lost</option><option value="Found">Found</option></select>
+</div>
+<div class="flex items-center gap-2 text-[11px]"><span class="text-gray-500">SEARCH</span>
+<input id="fSearch" onkeyup="filterItems()" placeholder="Search..." class="bg-[#0a0a0f] border border-[#2a2a3a] rounded px-2 py-1 text-white w-32"></div>
+<button onclick="document.getElementById('modal').classList.remove('hidden')" class="ml-auto bg-[#3b82f6] text-white text-[12px] px-4 py-1.5 rounded font-bold">+ POST ITEM</button>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">TOTAL ITEMS</div><div class="text-2xl font-bold mt-1">{{ items|length }}</div></div>
+<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">LOST</div><div class="text-2xl font-bold mt-1">{{ items|selectattr('type','equalto','Lost')|list|length }}</div></div>
+<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">FOUND</div><div class="text-2xl font-bold mt-1">{{ items|selectattr('type','equalto','Found')|list|length }}</div></div>
+<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">RATE</div><div class="text-2xl font-bold mt-1 text-green-400">78%</div></div>
+</div>
+
+<div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+{% for item in items %}
+<div class="item-card bg-[#15151f] border border-[#1f1f2e] rounded-lg overflow-hidden hover:border-[#3b82f6]/50 transition" data-title="{{ item.title }} {{ item.location }}" data-type="{{ item.type }}">
+{% if item.image %}<img src="/static/uploads/{{ item.image }}" class="h-40 w-full object-cover opacity-80">{% else %}<div class="h-40 bg-gradient-to-br from-[#1f1f2e] to-[#15151f] flex items-center justify-center text-3xl">📦</div>{% endif %}
 <div class="p-4">
 <div class="flex justify-between"><span class="mono text-[10px] px-2 py-1 rounded {% if item.type == 'Lost' %}bg-red-500/20 text-red-400{% else %}bg-green-500/20 text-green-400{% endif %}">{{ item.type | upper }}</span><span class="text-[10px] text-gray-500">{{ item.location }}</span></div>
 <h4 class="font-bold mt-3 text-[14px]">{{ item.title }}</h4>
@@ -7,3 +70,57 @@
 <a href="/delete/{{ item.id }}" onclick="return confirm('Delete this item?')" class="flex-1 text-center bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] py-1.5 rounded hover:bg-red-500/20">DELETE</a>
 </div>
 </div>
+</div>
+{% endfor %}
+</div>
+</div>
+
+<!-- POST MODAL -->
+<div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+<div class="bg-[#15151f] border border-[#2a2a3a] rounded-xl w-full max-w-md p-6">
+<div class="flex justify-between items-center mb-5"><h3 class="font-bold">Post New Item</h3><button onclick="document.getElementById('modal').classList.add('hidden')" class="text-xl text-gray-500">×</button></div>
+<form action="/add" method="POST" enctype="multipart/form-data" class="space-y-3">
+<input name="title" required placeholder="Item Name" class="w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white">
+<div class="grid grid-cols-2 gap-3"><select name="type" class="bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white"><option>Lost</option><option>Found</option></select><input name="location" required placeholder="Location" class="bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white"></div>
+<input name="contact" required placeholder="Contact" class="w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white">
+<input type="file" name="image" class="w-full text-[11px] text-gray-400">
+<button type="submit" class="w-full bg-[#3b82f6] text-white py-2.5 rounded font-bold text-[13px]">POST NOW</button>
+</form>
+</div>
+</div>
+
+<!-- EDIT MODAL - IDHI EDIT CHEYADANIKI -->
+<div id="editModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+<div class="bg-[#15151f] border border-[#2a2a3a] rounded-xl w-full max-w-md p-6">
+<div class="flex justify-between items-center mb-5"><h3 class="font-bold">Edit Item</h3><button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-xl text-gray-500">×</button></div>
+<form id="editForm" method="POST" enctype="multipart/form-data" class="space-y-3">
+<input name="title" id="eTitle" required class="w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white">
+<div class="grid grid-cols-2 gap-3"><select name="type" id="eType" class="bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white"><option>Lost</option><option>Found</option></select><input name="location" id="eLocation" required class="bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white"></div>
+<input name="contact" id="eContact" required class="w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded px-3 py-2.5 text-[13px] text-white">
+<input type="file" name="image" class="w-full text-[11px] text-gray-400"><div class="text-[10px] text-gray-500">Leave empty to keep old image</div>
+<button type="submit" class="w-full bg-[#3b82f6] text-white py-2.5 rounded font-bold text-[13px]">UPDATE</button>
+</form>
+</div>
+</div>
+
+<script>
+function filterItems(){
+ let q=document.getElementById('fSearch').value.toLowerCase();
+ let t=document.getElementById('fType').value;
+ document.querySelectorAll('.item-card').forEach(c=>{
+  let mt=c.dataset.title.toLowerCase().includes(q);
+  let tp=t==='All'||c.dataset.type.trim()===t;
+  c.style.display=mt&&tp?'':'none';
+ });
+}
+function openEdit(id, title, type, location, contact){
+ document.getElementById('eTitle').value = title;
+ document.getElementById('eType').value = type.trim();
+ document.getElementById('eLocation').value = location;
+ document.getElementById('eContact').value = contact;
+ document.getElementById('editForm').action = '/edit/' + id;
+ document.getElementById('editModal').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
