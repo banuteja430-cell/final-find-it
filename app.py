@@ -1,10 +1,35 @@
+from flask import Flask, render_template, request, redirect
+import os
+import difflib
+from werkzeug.utils import secure_filename
+
+app = Flask(__name__)
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+items = []
+next_id = 1
+
+def find_matches():
+    matches = []
+    lost = [i for i in items if i['type'].strip() == 'Lost']
+    found = [i for i in items if i['type'].strip() == 'Found']
+    for l in lost:
+        for f in found:
+            ratio = difflib.SequenceMatcher(None, l['title'].lower(), f['title'].lower()).ratio()
+            loc = difflib.SequenceMatcher(None, l['location'].lower(), f['location'].lower()).ratio()
+            if ratio > 0.6 or (ratio > 0.45 and loc > 0.5):
+                matches.append({'lost': l, 'found': f, 'score': int(ratio * 100)})
+    return matches
+
+@app.route('/')
+def home():
+    return render_template('index.html', items=items[::-1], matches=find_matches())
+
 @app.route('/add', methods=['POST'])
 def add_item():
     global next_id
-    # CAPTCHA CHECK - IDI FUNCTION LOPALA UNDALI
     if request.form.get('captcha') != '8':
         return "<h3>Wrong Captcha! Type 8</h3><a href='/'>Back</a>"
-    
     title = request.form.get('title')
     itype = request.form.get('type')
     location = request.form.get('location')
@@ -17,3 +42,18 @@ def add_item():
     items.append({'id': next_id, 'title': title, 'type': itype.strip(), 'location': location, 'contact': contact, 'image': filename})
     next_id += 1
     return redirect('/')
+
+@app.route('/delete/<int:item_id>')
+def delete_item(item_id):
+    global items
+    for it in items:
+        if it['id'] == item_id and it['image']:
+            try:
+                os.remove(os.path.join(UPLOAD_FOLDER, it['image']))
+            except:
+                pass
+    items = [i for i in items if i['id'] != item_id]
+    return redirect('/')
+
+if __name__ == '__main__':
+    app.run(debug=True)
