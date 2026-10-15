@@ -2,84 +2,68 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FindIt - Campus Lost & Found</title>
+<title>FindIt</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0e18;color:#cdd6e0;font-family:Arial;display:flex;min-height:100vh}
-.sidebar{width:220px;background:#101423;border-right:1px solid #1e2538;padding:20px 14px}
+.sidebar{width:220px;background:#101423;border-right:1px solid #1e2538;padding:20px 14px;position:fixed;height:100vh;left:0;top:0}
 .logo{display:flex;gap:10px;align-items:center;margin-bottom:35px}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#6c5cff,#2b90ff);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
+.logo-icon{width:36px;height:36px;background:#2b90ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
 .menu{list-style:none}
-.menu a{text-decoration:none}
-.menu li{padding:12px 14px;border-radius:10px;font-size:12px;color:#6b728a;margin-bottom:6px;display:flex;gap:10px;cursor:pointer;border:1px solid transparent}
-.menu li:hover{background:#161b2e;color:#fff}
+.menu li{padding:12px 14px;border-radius:10px;font-size:12px;color:#6b728a;margin-bottom:6px;cursor:pointer;border:1px solid transparent}
 .menu li.active{background:#1c223a;color:#fff;border-color:#2a355a}
-.main{flex:1;padding:20px 24px;overflow:auto}
+.main{flex:1;margin-left:220px;padding:20px 24px}
 .title{font-size:28px;font-weight:900;color:#fff}
-.sub{font-size:12px;color:#7a849e;margin-top:6px}
-.toolbar{display:flex;justify-content:space-between;align-items:center;margin:20px 0;background:#121726;border:1px solid #1e2538;border-radius:12px;padding:12px 14px;flex-wrap:wrap;gap:10px}
-.select,.search{background:#0a0e18;border:1px solid #242d46;border-radius:8px;color:#fff;padding:8px 12px;font-size:12px}
-.btn{padding:10px 18px;background:linear-gradient(135deg,#6c5cff,#2b90ff);color:#fff;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer}
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin:20px 0}
 .card{border-radius:14px;padding:14px;border:1px solid}
+.c1{background:#101a33;border-color:#2a355a}.c1 .card-label{color:#6c8cff}
+.c2{background:#2a1118;border-color:#4a2333}.c2 .card-label{color:#ff5a7a}
+.c3{background:#11221a;border-color:#1e4a33}.c3 .card-label{color:#2eff9a}
+.c4{background:#221e11;border-color:#4a3d1a}.c4 .card-label{color:#ffdd57}
 .card-label{font-size:8px;letter-spacing:0.15em;font-weight:700}
 .card-val{font-size:24px;font-weight:900;margin-top:8px;color:#fff}
-.c1{background:#121726;border-color:#2a355a}.c1 .card-label{color:#6c8cff}
-.c2{background:#1a1216;border-color:#4a2333}.c2 .card-label{color:#ff5a7a}
-.c3{background:#111a16;border-color:#1e4a33}.c3 .card-label{color:#2eff9a}
-.c4{background:#1a1811;border-color:#4a3d1a}.c4 .card-label{color:#ffdd57}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .item-card{background:#121726;border:1px solid #1e2538;border-radius:14px;padding:14px}
-.item-card img{width:100%;border-radius:10px;margin-top:10px}
 .badge{font-size:9px;padding:4px 10px;border-radius:20px;font-weight:800}
 .form-card{background:#121726;border:1px solid #1e2538;border-radius:16px;padding:20px;margin-top:20px}
 .form-card input,.form-card select{width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff}
-@media(max-width:800px){.sidebar{display:none}.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+.btn{padding:10px 18px;background:#2b90ff;color:#fff;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer}
+.select,.search{background:#0a0e18;border:1px solid #242d46;border-radius:8px;color:#fff;padding:8px 12px;font-size:12px}
 </style>
 </head>
 <body>
 <div class="sidebar">
-<div class="logo"><div class="logo-icon">F</div><div style="font-size:12px;font-weight:800;color:#fff">FINDIT<br><span style="font-size:9px;color:#6b728a;letter-spacing:0.15em">CAMPUS LOST & FOUND</span></div></div>
+<div class="logo"><div class="logo-icon">F</div><div style="font-size:12px;font-weight:800;color:#fff">FINDIT</div></div>
 <ul class="menu">
-<a href="/"><li class="{% if f_type=='All' %}active{% endif %}"><span>01</span> Overview</li></a>
-<a href="/?type=Lost"><li class="{% if f_type=='Lost' %}active{% endif %}"><span>02</span> Lost items</li></a>
-<a href="/?type=Found"><li class="{% if f_type=='Found' %}active{% endif %}"><span>03</span> Found items</li></a>
-<a href="#post"><li><span>04</span> Post new</li></a>
+<li id="m1" onclick="window.location.href='/'">01 Overview</li>
+<li id="m2" onclick="window.location.href='/?type=Lost'">02 Lost items</li>
+<li id="m3" onclick="window.location.href='/?type=Found'">03 Found items</li>
+<li id="m4" onclick="document.getElementById('post').scrollIntoView({behavior:'smooth'})">04 Post new</li>
 </ul>
 </div>
 <div class="main">
-<div style="font-size:9px;letter-spacing:0.2em;color:#5a647e;margin-bottom:8px">SMART CAMPUS LOST & FOUND</div>
 <div class="title">Campus Recovery Hub</div>
-<div class="sub">Find, report, and recover your belongings faster.</div>
-<div class="toolbar">
-<form method="get" style="display:flex;gap:8px;align-items:center">
-<select name="type" class="select" onchange="this.form.submit()">
-<option value="All" {% if f_type=='All' %}selected{% endif %}>All</option>
-<option value="Lost" {% if f_type=='Lost' %}selected{% endif %}>Lost</option>
-<option value="Found" {% if f_type=='Found' %}selected{% endif %}>Found</option>
-</select>
-<input name="q" value="{{ q }}" class="search" placeholder="Search...">
-</form>
+<div style="display:flex;gap:8px;margin:20px 0">
+<select class="select" onchange="window.location.href='/?type='+this.value"><option value="All" {% if f_type=='All' %}selected{% endif %}>All</option><option value="Lost" {% if f_type=='Lost' %}selected{% endif %}>Lost</option><option value="Found" {% if f_type=='Found' %}selected{% endif %}>Found</option></select>
+<form method="get"><input name="q" value="{{ q }}" class="search" placeholder="Search..."></form>
 <button class="btn" onclick="document.getElementById('post').scrollIntoView({behavior:'smooth'})">+ POST ITEM</button>
 </div>
 <div class="stats">
-<div class="card c1"><div class="card-label">TOTAL ITEMS</div><div class="card-val">{{ total }}</div></div>
-<div class="card c2"><div class="card-label">LOST ITEMS</div><div class="card-val">{{ lost }}</div></div>
-<div class="card c3"><div class="card-label">FOUND ITEMS</div><div class="card-val">{{ found }}</div></div>
-<div class="card c4"><div class="card-label">RECOVERY RATE</div><div class="card-val">{{ rate }}%</div></div>
+<div class="card c1"><div class="card-label">TOTAL</div><div class="card-val">{{ total }}</div></div>
+<div class="card c2"><div class="card-label">LOST</div><div class="card-val">{{ lost }}</div></div>
+<div class="card c3"><div class="card-label">FOUND</div><div class="card-val">{{ found }}</div></div>
+<div class="card c4"><div class="card-label">RATE</div><div class="card-val">{{ rate }}%</div></div>
 </div>
 <div class="grid">
 {% for it in items %}
 <div class="item-card">
-<div style="display:flex;justify-content:space-between;align-items:center">
-<span class="badge" style="{% if it.type=='Lost' %}background:#ff2a5a22;color:#ff5a7a;border:1px solid #ff2a5a44{% else %}background:#00ff8822;color:#2eff9a;border:1px solid #00ff8844{% endif %}">{{ it.type }}</span>
-</div>
-<div style="margin-top:10px;font-weight:800;font-size:14px;color:#fff">{{ it.title }}</div>
-<div style="font-size:11px;color:#6b728a;margin-top:5px">📍 {{ it.location }} • 📞 {{ it.contact }}</div>
-{% if it.image %}<img src="/static/uploads/{{ it.image }}">{% endif %}
-<div style="display:flex;gap:6px;margin-top:12px">
-<a href="/edit/{{ it.id }}" style="flex:1;background:#2b90ff22;color:#6c8cff;border:1px solid #2b90ff44;padding:6px;border-radius:8px;font-size:11px;font-weight:800;text-decoration:none;text-align:center">✏️ EDIT</a>
-<a href="/delete/{{ it.id }}" onclick="return confirm('Delete?')" style="flex:1;background:#ff2a5a22;color:#ff5a7a;border:1px solid #ff2a5a44;padding:6px;border-radius:8px;font-size:11px;font-weight:800;text-decoration:none;text-align:center">🗑️ DELETE</a>
+<span class="badge" style="{% if it.type=='Lost' %}background:#ff2a5a22;color:#ff5a7a{% else %}background:#00ff8822;color:#2eff9a{% endif %}">{{ it.type }}</span>
+<div style="margin-top:10px;font-weight:800;color:#fff">{{ it.title }}</div>
+<div style="font-size:11px;color:#6b728a;margin-top:5px">{{ it.location }} - {{ it.contact }}</div>
+{% if it.image %}<img src="/static/uploads/{{ it.image }}" style="width:100%;border-radius:10px;margin-top:10px">{% endif %}
+<div style="display:flex;gap:8px;margin-top:12px">
+<a href="/edit/{{ it.id }}" style="flex:1;background:#1e3a5f;color:#6c8cff;padding:8px;border-radius:8px;font-size:11px;font-weight:800;text-align:center;text-decoration:none">EDIT</a>
+<a href="/delete/{{ it.id }}" style="flex:1;background:#4a1a2a;color:#ff5a7a;padding:8px;border-radius:8px;font-size:11px;font-weight:800;text-align:center;text-decoration:none">DELETE</a>
 </div>
 </div>
 {% endfor %}
@@ -88,7 +72,7 @@ body{background:#0a0e18;color:#cdd6e0;font-family:Arial;display:flex;min-height:
 <h4 style="color:#fff;margin-bottom:14px">POST NEW ITEM</h4>
 <form action="/add" method="post" enctype="multipart/form-data">
 <input name="title" placeholder="Item Title" required>
-<select name="type" required><option value="Lost">🔴 Lost Item</option><option value="Found">🟢 Found Item</option></select>
+<select name="type" required><option value="Lost">Lost</option><option value="Found">Found</option></select>
 <input name="location" placeholder="Location" required>
 <input name="contact" placeholder="Contact" required>
 <input type="file" name="image">
@@ -96,5 +80,13 @@ body{background:#0a0e18;color:#cdd6e0;font-family:Arial;display:flex;min-height:
 </form>
 </div>
 </div>
+<script>
+const params = new URLSearchParams(window.location.search);
+const t = params.get('type');
+document.querySelectorAll('.menu li').forEach(e=>e.classList.remove('active'));
+if(t==='Lost') document.getElementById('m2').classList.add('active');
+else if(t==='Found') document.getElementById('m3').classList.add('active');
+else if(!t) document.getElementById('m1').classList.add('active');
+</script>
 </body>
 </html>
