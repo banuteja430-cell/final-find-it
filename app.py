@@ -8,7 +8,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def init_db():
     conn = sqlite3.connect('findit.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, location TEXT, contact TEXT, image TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS items 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, location TEXT, contact TEXT, image TEXT, email TEXT, instagram TEXT)''')
+    # Add new columns if old DB exists
+    try: c.execute("ALTER TABLE items ADD COLUMN email TEXT")
+    except: pass
+    try: c.execute("ALTER TABLE items ADD COLUMN instagram TEXT")
+    except: pass
     conn.commit()
     conn.close()
 init_db()
@@ -39,7 +45,6 @@ def find_match(title, itype):
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     opposite = "Found" if itype == "Lost" else "Lost"
-    # Simple matching - title lo 1 word aina match ayithe
     keywords = title.lower().split()
     for kw in keywords:
         if len(kw) < 3: continue
@@ -58,13 +63,17 @@ def home():
     matched_title = request.args.get('matched_title', '')
     matched_contact = request.args.get('matched_contact', '')
     matched_location = request.args.get('matched_location', '')
+    matched_email = request.args.get('matched_email', '')
+    matched_insta = request.args.get('matched_insta', '')
     items = get_items(f_type, q)
     all_items = get_items()
     total = len(all_items)
     lost = len([i for i in all_items if i['type'] == 'Lost'])
     found = len([i for i in all_items if i['type'] == 'Found'])
     rate = int((found/total*100) if total>0 else 78)
-    return render_template('index.html', items=items, total=total, lost=lost, found=found, rate=rate, q=q, f_type=f_type, matched_title=matched_title, matched_contact=matched_contact, matched_location=matched_location)
+    return render_template('index.html', items=items, total=total, lost=lost, found=found, rate=rate, q=q, f_type=f_type,
+                           matched_title=matched_title, matched_contact=matched_contact, matched_location=matched_location,
+                           matched_email=matched_email, matched_insta=matched_insta)
 
 @app.route('/add', methods=['POST'])
 def add_item():
@@ -72,24 +81,25 @@ def add_item():
     itype = request.form.get('type')
     location = request.form.get('location')
     contact = request.form.get('contact')
+    email = request.form.get('email','')
+    instagram = request.form.get('instagram','')
     image = request.files.get('image')
     filename = ""
     if image and image.filename != "":
         filename = secure_filename(image.filename)
         image.save(os.path.join(UPLOAD_FOLDER, filename))
     
-    # MATCH CHECK BEFORE INSERT
     match = find_match(title, itype)
 
     conn = sqlite3.connect('findit.db')
     c = conn.cursor()
-    c.execute("INSERT INTO items (title,type,location,contact,image) VALUES (?,?,?,?,?)", (title, itype, location, contact, filename))
+    c.execute("INSERT INTO items (title,type,location,contact,image,email,instagram) VALUES (?,?,?,?,?,?,?)", 
+              (title, itype, location, contact, filename, email, instagram))
     conn.commit()
     conn.close()
 
     if match:
-        # Match dorikithe message tho redirect
-        return redirect(f"/?matched_title={match['title']}&matched_contact={match['contact']}&matched_location={match['location']}&type=Post")
+        return redirect(f"/?matched_title={match['title']}&matched_contact={match['contact']}&matched_location={match['location']}&matched_email={match['email'] or ''}&matched_insta={match['instagram'] or ''}&type=Post")
     return redirect('/')
 
 @app.route('/delete/<int:item_id>')
@@ -117,15 +127,17 @@ def update_item(item_id):
     itype = request.form.get('type')
     location = request.form.get('location')
     contact = request.form.get('contact')
+    email = request.form.get('email','')
+    instagram = request.form.get('instagram','')
     image = request.files.get('image')
     conn = sqlite3.connect('findit.db')
     c = conn.cursor()
     if image and image.filename != "":
         filename = secure_filename(image.filename)
         image.save(os.path.join(UPLOAD_FOLDER, filename))
-        c.execute("UPDATE items SET title=?, type=?, location=?, contact=?, image=? WHERE id=?", (title, itype, location, contact, filename, item_id))
+        c.execute("UPDATE items SET title=?, type=?, location=?, contact=?, image=?, email=?, instagram=? WHERE id=?", (title, itype, location, contact, filename, email, instagram, item_id))
     else:
-        c.execute("UPDATE items SET title=?, type=?, location=?, contact=? WHERE id=?", (title, itype, location, contact, item_id))
+        c.execute("UPDATE items SET title=?, type=?, location=?, contact=?, email=?, instagram=? WHERE id=?", (title, itype, location, contact, email, instagram, item_id))
     conn.commit()
     conn.close()
     return redirect('/')
