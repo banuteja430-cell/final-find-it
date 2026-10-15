@@ -3,40 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Data Arena - FindIt</title>
+<title>FindIt - Lost & Found</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f}
 .mono{font-family:'JetBrains Mono',monospace}
+.active-section{background:#1c1c2e;color:white!important;border-left:3px solid #3b82f6}
 </style>
 </head>
 <body class="bg-[#0a0a0f] text-white flex min-h-screen">
 <!-- SIDEBAR -->
 <div class="w-[240px] bg-[#111119] border-r border-[#1f1f2e] fixed h-screen flex flex-col p-5 hidden md:flex">
 <div class="flex items-center gap-3 mb-10">
-<div class="w-8 h-8 bg-[#3b82f6] rounded flex items-center justify-center font-bold text-xs">DA</div>
-<div><div class="font-bold text-xs tracking-widest">THE DATA</div><div class="text-[10px] text-gray-400 tracking-widest">ARENA • FindIt</div></div>
+<div class="w-8 h-8 bg-[#3b82f6] rounded flex items-center justify-center font-bold text-xs">F</div>
+<div><div class="font-bold text-xs tracking-widest">FINDIT</div><div class="text-[10px] text-gray-400 tracking-widest">LOST & FOUND • v1</div></div>
 </div>
 <div class="text-[10px] text-gray-500 tracking-widest mb-3">SECTIONS</div>
-<div class="space-y-1 text-[13px]">
-<div class="bg-[#1c1c2e] px-3 py-2 rounded text-white">01 Overview</div>
-<div class="px-3 py-2 text-gray-400">02 Lost items</div>
-<div class="px-3 py-2 text-gray-400">03 Found items</div>
-<div class="px-3 py-2 text-gray-400">04 Post new</div>
+<div class="space-y-1 text-[13px]" id="sidebar">
+<div onclick="showSection('overview')" id="s-overview" class="active-section px-3 py-2 rounded text-white cursor-pointer">01 Overview</div>
+<div onclick="showSection('lost')" id="s-lost" class="px-3 py-2 text-gray-400 hover:text-white cursor-pointer rounded">02 Lost items</div>
+<div onclick="showSection('found')" id="s-found" class="px-3 py-2 text-gray-400 hover:text-white cursor-pointer rounded">03 Found items</div>
+<div onclick="document.getElementById('modal').classList.remove('hidden')" class="px-3 py-2 text-gray-400 hover:text-white cursor-pointer rounded">04 Post new</div>
 </div>
 <div class="mt-auto pt-6 border-t border-[#1f1f2e] text-[10px] text-gray-500">
-<p>{{ items|length }} items in view</p>
+<p id="countText">{{ items|length }} items in view</p>
 </div>
 </div>
 
 <!-- MAIN -->
 <div class="flex-1 md:ml-[240px] p-4 md:p-8">
 <div class="mb-6">
-<div class="text-[10px] tracking-[0.2em] text-gray-500">SMART CAMPUS LOST & FOUND INTELLIGENCE</div>
-<h1 class="text-3xl font-bold mt-1">The Data Arena</h1>
-<p class="text-gray-400 text-[13px] mt-2 max-w-2xl">Transforming lost item reports into actionable recovery insights.</p>
-<div class="mt-4 bg-[#facc15]/10 border border-[#facc15]/20 text-[#facc15] text-[11px] px-3 py-2 rounded mono">DEMO - FindIt v1</div>
+<div class="text-[10px] tracking-[0.2em] text-gray-500">SMART CAMPUS LOST & FOUND</div>
+<h1 id="mainTitle" class="text-3xl font-bold mt-1">FindIt Dashboard</h1>
+<p class="text-gray-400 text-[13px] mt-2 max-w-2xl">Post and find lost belongings across campus - simple and fast.</p>
 </div>
 
 <!-- Filters -->
@@ -50,11 +50,10 @@ body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f}
 </div>
 
 <!-- Stats -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
 <div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">TOTAL ITEMS</div><div class="text-2xl font-bold mt-1">{{ items|length }}</div></div>
-<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">LOST</div><div class="text-2xl font-bold mt-1">{{ items|selectattr('type','equalto','Lost')|list|length }}</div></div>
-<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">FOUND</div><div class="text-2xl font-bold mt-1">{{ items|selectattr('type','equalto','Found')|list|length }}</div></div>
-<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">RATE</div><div class="text-2xl font-bold mt-1 text-green-400">78%</div></div>
+<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">LOST</div><div class="text-2xl font-bold mt-1 text-red-400">{{ items|selectattr('type','equalto','Lost')|list|length }}</div></div>
+<div class="bg-[#15151f] border border-[#1f1f2e] rounded-lg p-4"><div class="text-[10px] text-gray-500">FOUND</div><div class="text-2xl font-bold mt-1 text-green-400">{{ items|selectattr('type','equalto','Found')|list|length }}</div></div>
 </div>
 
 <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -67,11 +66,14 @@ body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f}
 <p class="text-[11px] text-gray-400 mt-1 mono">Contact: {{ item.contact }}</p>
 <div class="flex gap-2 mt-3">
 <button onclick="openEdit({{ item.id }}, '{{ item.title }}', '{{ item.type }}', '{{ item.location }}', '{{ item.contact }}')" class="flex-1 bg-[#1f1f2e] border border-[#2a2a3a] text-[11px] py-1.5 rounded hover:bg-[#2a2a3a]">EDIT</button>
-<a href="/delete/{{ item.id }}" onclick="return confirm('Delete this item?')" class="flex-1 text-center bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] py-1.5 rounded hover:bg-red-500/20">DELETE</a>
+<a href="/delete/{{ item.id }}" onclick="return confirm('Delete?')" class="flex-1 text-center bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] py-1.5 rounded">DELETE</a>
 </div>
 </div>
 </div>
 {% endfor %}
+{% if items|length == 0 %}
+<div class="col-span-3 bg-[#15151f] border border-dashed border-[#2a2a3a] rounded-lg p-12 text-center text-gray-500 text-[13px]">No items yet. Click + POST ITEM</div>
+{% endif %}
 </div>
 </div>
 
@@ -89,7 +91,7 @@ body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f}
 </div>
 </div>
 
-<!-- EDIT MODAL - IDHI EDIT CHEYADANIKI -->
+<!-- EDIT MODAL -->
 <div id="editModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
 <div class="bg-[#15151f] border border-[#2a2a3a] rounded-xl w-full max-w-md p-6">
 <div class="flex justify-between items-center mb-5"><h3 class="font-bold">Edit Item</h3><button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-xl text-gray-500">×</button></div>
@@ -104,14 +106,38 @@ body{font-family:'Space Grotesk',sans-serif;background:#0a0a0f}
 </div>
 
 <script>
+function setActive(id){
+ document.querySelectorAll('#sidebar div').forEach(d=>d.classList.remove('active-section'));
+ document.getElementById(id).classList.add('active-section');
+}
+function showSection(sec){
+ if(sec==='overview'){
+  document.getElementById('fType').value='All';
+  setActive('s-overview');
+  document.getElementById('mainTitle').innerText='FindIt Dashboard';
+ }else if(sec==='lost'){
+  document.getElementById('fType').value='Lost';
+  setActive('s-lost');
+  document.getElementById('mainTitle').innerText='Lost Items';
+ }else if(sec==='found'){
+  document.getElementById('fType').value='Found';
+  setActive('s-found');
+  document.getElementById('mainTitle').innerText='Found Items';
+ }
+ filterItems();
+}
 function filterItems(){
  let q=document.getElementById('fSearch').value.toLowerCase();
  let t=document.getElementById('fType').value;
+ let visible=0;
  document.querySelectorAll('.item-card').forEach(c=>{
   let mt=c.dataset.title.toLowerCase().includes(q);
   let tp=t==='All'||c.dataset.type.trim()===t;
-  c.style.display=mt&&tp?'':'none';
+  let show=mt&&tp;
+  c.style.display=show?'':'none';
+  if(show) visible++;
  });
+ document.getElementById('countText').innerText=visible+' items in view';
 }
 function openEdit(id, title, type, location, contact){
  document.getElementById('eTitle').value = title;
