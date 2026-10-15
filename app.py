@@ -77,5 +77,34 @@ def delete_item(item_id):
     conn.close()
     return redirect('/')
 
+@app.route('/edit/<int:item_id>')
+def edit_page(item_id):
+    conn = sqlite3.connect('findit.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT * FROM items WHERE id=?", (item_id,))
+    item = c.fetchone()
+    conn.close()
+    return render_template('edit.html', item=item)
+
+@app.route('/update/<int:item_id>', methods=['POST'])
+def update_item(item_id):
+    title = request.form.get('title')
+    itype = request.form.get('type')
+    location = request.form.get('location')
+    contact = request.form.get('contact')
+    image = request.files.get('image')
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    if image and image.filename != "":
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(UPLOAD_FOLDER, filename))
+        c.execute("UPDATE items SET title=?, type=?, location=?, contact=?, image=? WHERE id=?", (title, itype, location, contact, filename, item_id))
+    else:
+        c.execute("UPDATE items SET title=?, type=?, location=?, contact=? WHERE id=?", (title, itype, location, contact, item_id))
+    conn.commit()
+    conn.close()
+    return redirect('/')
+
 if __name__ == '__main__':
     app.run(debug=True)
