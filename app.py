@@ -1,35 +1,57 @@
 from flask import Flask, render_template, request, redirect
 import os
-import difflib
+import sqlite3
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-items = []
-next_id = 1
 
-def find_matches():
-    matches = []
-    lost = [i for i in items if i['type'].strip() == 'Lost']
-    found = [i for i in items if i['type'].strip() == 'Found']
-    for l in lost:
-        for f in found:
-            ratio = difflib.SequenceMatcher(None, l['title'].lower(), f['title'].lower()).ratio()
-            loc = difflib.SequenceMatcher(None, l['location'].lower(), f['location'].lower()).ratio()
-            if ratio > 0.6 or (ratio > 0.45 and loc > 0.5):
-                matches.append({'lost': l, 'found': f, 'score': int(ratio * 100)})
-    return matches
+def init_db():
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS items 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, location TEXT, contact TEXT, image TEXT)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+def get_items(filter_type='All', search=''):
+    conn = sqlite3.connect('findit.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    query = "SELECT * FROM items"
+    params = []
+    conds = []
+    if filter_type != 'All':
+        conds.append("type = ?")
+        params.append(filter_type)
+    if search:
+        conds.append("(title LIKE ? OR location LIKE ?)")
+        params.extend([f"%{search}%", f"%{search}%"])
+    if conds:
+        query += " WHERE " + " AND ".join(conds)
+    query += " ORDER BY id DESC"
+    c.execute(query, params)
+    rows = c.fetchall()
+    conn.close()
+    return rows
 
 @app.route('/')
 def home():
-    return render_template('index.html', items=items[::-1], matches=find_matches())
+    q = request.args.get('q', '')
+    f_type = request.args.get('type', 'All')
+    items = get_items(f_type, q)
+    all_items = get_items()
+    total = len(all_items)
+    lost = len([i for i in all_items if i['type'] == 'Lost'])
+    found = len([i for i in all_items if i['type'] == 'Found'])
+    rate = int((found/total*100) if total>0 else 78)
+    return render_template('index.html', items=items, total=total, lost=lost, found=found, rate=rate, q=q, f_type=f_type)
 
 @app.route('/add', methods=['POST'])
 def add_item():
-    global next_id
-    if request.form.get('captcha') != '8':
-        return "<h3>Wrong Captcha! Type 8</h3><a href='/'>Back</a>"
     title = request.form.get('title')
     itype = request.form.get('type')
     location = request.form.get('location')
@@ -37,22 +59,22 @@ def add_item():
     image = request.files.get('image')
     filename = ""
     if image and image.filename != "":
-        filename = f"{next_id}_{secure_filename(image.filename)}"
+        filename = secure_filename(image.filename)
         image.save(os.path.join(UPLOAD_FOLDER, filename))
-    items.append({'id': next_id, 'title': title, 'type': itype.strip(), 'location': location, 'contact': contact, 'image': filename})
-    next_id += 1
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO items (title,type,location,contact,image) VALUES (?,?,?,?,?)", (title, itype, location, contact, filename))
+    conn.commit()
+    conn.close()
     return redirect('/')
 
 @app.route('/delete/<int:item_id>')
 def delete_item(item_id):
-    global items
-    for it in items:
-        if it['id'] == item_id and it['image']:
-            try:
-                os.remove(os.path.join(UPLOAD_FOLDER, it['image']))
-            except:
-                pass
-    items = [i for i in items if i['id'] != item_id]
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM items WHERE id=?", (item_id,))
+    conn.commit()
+    conn.close()
     return redirect('/')
 
 if __name__ == '__main__':
