@@ -1,32 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Edit Item</title>
-<style>
-body{background:#0a0e18;color:#fff;font-family:Arial;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-.card{background:#121726;border:1px solid #1e2538;border-radius:16px;padding:24px;width:100%;max-width:420px}
-input,select{width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff}
-.btn{width:100%;padding:14px;margin-top:12px;border:none;border-radius:10px;font-weight:800;cursor:pointer}
-.btn-save{background:linear-gradient(135deg,#6c5cff,#2b90ff);color:#fff}
-.btn-cancel{background:#1e2538;color:#888;display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;margin-top:10px}
-</style>
-</head>
-<body>
-<div class="card">
-<h3 style="text-align:center;margin-bottom:16px">✏️ Update Item</h3>
-<form action="/update/{{ item.id }}" method="post" enctype="multipart/form-data">
-<input name="title" value="{{ item.title }}" required>
-<select name="type" required>
-<option value="Lost" {% if item.type=='Lost' %}selected{% endif %}>🔴 Lost</option>
-<option value="Found" {% if item.type=='Found' %}selected{% endif %}>🟢 Found</option>
-</select>
-<input name="location" value="{{ item.location }}" required>
-<input name="contact" value="{{ item.contact }}" required>
-<input type="file" name="image">
-<button class="btn btn-save" type="submit">💾 UPDATE NOW</button>
+<form action="/update/{{ item.id }}" method="post" enctype="multipart/form-data" style="background:#121726;padding:20px;border-radius:16px;max-width:500px;margin:40px auto">
+<input name="title" value="{{ item.title }}" required style="width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff">
+<input name="location" value="{{ item.location }}" required style="width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff">
+<input name="contact" value="{{ item.contact }}" required style="width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff">
+<input name="email" value="{{ item.email }}" placeholder="Email" style="width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff">
+<input name="instagram" value="{{ item.instagram }}" placeholder="Instagram" style="width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff">
+<button type="submit" style="width:100%;padding:14px;background:#2b90ff;color:#fff;border:none;border-radius:10px;font-weight:800">UPDATE</button>
 </form>
-<a href="/" class="btn-cancel">← Cancel</a>
-</div>
-</body>
-</html>
