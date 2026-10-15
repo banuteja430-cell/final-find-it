@@ -20,7 +20,7 @@ def get_items(filter_type='All', search=''):
     query = "SELECT * FROM items"
     params = []
     conds = []
-    if filter_type != 'All':
+    if filter_type not in ['All','Post']:
         conds.append("type = ?")
         params.append(filter_type)
     if search:
@@ -34,17 +34,37 @@ def get_items(filter_type='All', search=''):
     conn.close()
     return rows
 
+def find_match(title, itype):
+    conn = sqlite3.connect('findit.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    opposite = "Found" if itype == "Lost" else "Lost"
+    # Simple matching - title lo 1 word aina match ayithe
+    keywords = title.lower().split()
+    for kw in keywords:
+        if len(kw) < 3: continue
+        c.execute("SELECT * FROM items WHERE type=? AND LOWER(title) LIKE ?", (opposite, f"%{kw}%"))
+        match = c.fetchone()
+        if match:
+            conn.close()
+            return match
+    conn.close()
+    return None
+
 @app.route('/')
 def home():
     q = request.args.get('q', '')
     f_type = request.args.get('type', 'All')
+    matched_title = request.args.get('matched_title', '')
+    matched_contact = request.args.get('matched_contact', '')
+    matched_location = request.args.get('matched_location', '')
     items = get_items(f_type, q)
     all_items = get_items()
     total = len(all_items)
     lost = len([i for i in all_items if i['type'] == 'Lost'])
     found = len([i for i in all_items if i['type'] == 'Found'])
     rate = int((found/total*100) if total>0 else 78)
-    return render_template('index.html', items=items, total=total, lost=lost, found=found, rate=rate, q=q, f_type=f_type)
+    return render_template('index.html', items=items, total=total, lost=lost, found=found, rate=rate, q=q, f_type=f_type, matched_title=matched_title, matched_contact=matched_contact, matched_location=matched_location)
 
 @app.route('/add', methods=['POST'])
 def add_item():
@@ -57,11 +77,19 @@ def add_item():
     if image and image.filename != "":
         filename = secure_filename(image.filename)
         image.save(os.path.join(UPLOAD_FOLDER, filename))
+    
+    # MATCH CHECK BEFORE INSERT
+    match = find_match(title, itype)
+
     conn = sqlite3.connect('findit.db')
     c = conn.cursor()
     c.execute("INSERT INTO items (title,type,location,contact,image) VALUES (?,?,?,?,?)", (title, itype, location, contact, filename))
     conn.commit()
     conn.close()
+
+    if match:
+        # Match dorikithe message tho redirect
+        return redirect(f"/?matched_title={match['title']}&matched_contact={match['contact']}&matched_location={match['location']}&type=Post")
     return redirect('/')
 
 @app.route('/delete/<int:item_id>')
