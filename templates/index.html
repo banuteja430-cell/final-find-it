@@ -1,116 +1,146 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FindIt</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0e18;color:#cdd6e0;font-family:Arial;display:flex;min-height:100vh}
-.sidebar{width:220px;background:#101423;border-right:1px solid #1e2538;padding:20px 14px;position:fixed;height:100vh;left:0;top:0}
-.logo{display:flex;gap:10px;align-items:center;margin-bottom:35px}
-.logo-icon{width:36px;height:36px;background:#2b90ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
-.menu{list-style:none}
-.menu li{padding:12px 14px;border-radius:10px;font-size:12px;color:#6b728a;margin-bottom:6px;cursor:pointer;border:1px solid transparent}
-.menu li.active{background:#1c223a;color:#fff;border-color:#2a355a;box-shadow:0 0 10px rgba(43,144,255,0.3)}
-.main{flex:1;margin-left:220px;padding:20px 24px}
-.title{font-size:28px;font-weight:900;color:#fff}
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin:20px 0}
-.card{border-radius:14px;padding:14px;border:1px solid}
-.c1{background:#101a33;border-color:#2a355a}.c1 .card-label{color:#6c8cff}
-.c2{background:#2a1118;border-color:#4a2333}.c2 .card-label{color:#ff5a7a}
-.c3{background:#11221a;border-color:#1e4a33}.c3 .card-label{color:#2eff9a}
-.c4{background:#221e11;border-color:#4a3d1a}.c4 .card-label{color:#ffdd57}
-.card-label{font-size:8px;letter-spacing:0.15em;font-weight:700}
-.card-val{font-size:24px;font-weight:900;margin-top:8px;color:#fff}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.item-card{background:#121726;border:1px solid #1e2538;border-radius:14px;padding:14px}
-.badge{font-size:9px;padding:4px 10px;border-radius:20px;font-weight:800}
-.form-card{background:#121726;border:1px solid #1e2538;border-radius:16px;padding:20px;margin-top:20px}
-.form-card input,.form-card select{width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff}
-.btn{padding:10px 18px;background:#2b90ff;color:#fff;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer}
-.select,.search{background:#0a0e18;border:1px solid #242d46;border-radius:8px;color:#fff;padding:8px 12px;font-size:12px}
-.match-banner{background:linear-gradient(90deg,#00ff88,#2b90ff);color:#000;padding:14px;border-radius:12px;font-weight:900;text-align:center;margin-bottom:20px;animation:blink 1s infinite}
-@keyframes blink{0%{opacity:1}50%{opacity:0.7}100%{opacity:1}}
-</style>
-{% if matched_title %}
-<script>
-window.onload = function(){
- alert("🎉 MATCH FOUND!\n\nNuvvu post chesina item ki match dorikindi!\n\nItem: {{ matched_title }}\nLocation: {{ matched_location }}\nContact: {{ matched_contact }}\n\nVere vallani contact chey bro!");
-}
-</script>
-{% endif %}
-</head>
-<body>
-<div class="sidebar">
-<div class="logo"><div class="logo-icon">F</div><div style="font-size:12px;font-weight:800;color:#fff">FINDIT</div></div>
-<ul class="menu">
-<li id="m1" onclick="window.location.href='/'">01 Overview</li>
-<li id="m2" onclick="window.location.href='/?type=Lost'">02 Lost items</li>
-<li id="m3" onclick="window.location.href='/?type=Found'">03 Found items</li>
-<li id="m4" onclick="window.location.href='/?type=Post'">04 Post new</li>
-</ul>
-</div>
-<div class="main">
-<div class="title">Campus Recovery Hub</div>
+from flask import Flask, render_template, request, redirect
+import os, sqlite3
+from werkzeug.utils import secure_filename
+app = Flask(__name__)
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-{% if matched_title %}
-<div class="match-banner">🎉 MATCH FOUND! Item: {{ matched_title }} | Contact: {{ matched_contact }} | Location: {{ matched_location }}</div>
-{% endif %}
+def init_db():
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS items 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, location TEXT, contact TEXT, image TEXT, email TEXT, instagram TEXT)''')
+    # Add new columns if old DB exists
+    try: c.execute("ALTER TABLE items ADD COLUMN email TEXT")
+    except: pass
+    try: c.execute("ALTER TABLE items ADD COLUMN instagram TEXT")
+    except: pass
+    conn.commit()
+    conn.close()
+init_db()
 
-{% if f_type != 'Post' %}
-<div style="display:flex;gap:8px;margin:20px 0">
-<select class="select" onchange="window.location.href='/?type='+this.value"><option value="All" {% if f_type=='All' %}selected{% endif %}>All</option><option value="Lost" {% if f_type=='Lost' %}selected{% endif %}>Lost</option><option value="Found" {% if f_type=='Found' %}selected{% endif %}>Found</option></select>
-<form method="get"><input name="q" value="{{ q }}" class="search" placeholder="Search..."></form>
-<button class="btn" onclick="window.location.href='/?type=Post'">+ POST ITEM</button>
-</div>
+def get_items(filter_type='All', search=''):
+    conn = sqlite3.connect('findit.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    query = "SELECT * FROM items"
+    params = []
+    conds = []
+    if filter_type not in ['All','Post']:
+        conds.append("type = ?")
+        params.append(filter_type)
+    if search:
+        conds.append("(title LIKE ? OR location LIKE ?)")
+        params.extend([f"%{search}%", f"%{search}%"])
+    if conds:
+        query += " WHERE " + " AND ".join(conds)
+    query += " ORDER BY id DESC"
+    c.execute(query, params)
+    rows = c.fetchall()
+    conn.close()
+    return rows
 
-<div class="stats">
-<div class="card c1"><div class="card-label">TOTAL</div><div class="card-val">{{ total }}</div></div>
-<div class="card c2"><div class="card-label">LOST</div><div class="card-val">{{ lost }}</div></div>
-<div class="card c3"><div class="card-label">FOUND</div><div class="card-val">{{ found }}</div></div>
-<div class="card c4"><div class="card-label">RATE</div><div class="card-val">{{ rate }}%</div></div>
-</div>
+def find_match(title, itype):
+    conn = sqlite3.connect('findit.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    opposite = "Found" if itype == "Lost" else "Lost"
+    keywords = title.lower().split()
+    for kw in keywords:
+        if len(kw) < 3: continue
+        c.execute("SELECT * FROM items WHERE type=? AND LOWER(title) LIKE ?", (opposite, f"%{kw}%"))
+        match = c.fetchone()
+        if match:
+            conn.close()
+            return match
+    conn.close()
+    return None
 
-<div class="grid">
-{% for it in items %}
-<div class="item-card">
-<span class="badge" style="{% if it.type=='Lost' %}background:#ff2a5a22;color:#ff5a7a{% else %}background:#00ff8822;color:#2eff9a{% endif %}">{{ it.type }}</span>
-<div style="margin-top:10px;font-weight:800;color:#fff">{{ it.title }}</div>
-<div style="font-size:11px;color:#6b728a;margin-top:5px">{{ it.location }} - {{ it.contact }}</div>
-{% if it.image %}<img src="/static/uploads/{{ it.image }}" style="width:100%;border-radius:10px;margin-top:10px">{% endif %}
-<div style="display:flex;gap:8px;margin-top:12px">
-<a href="/edit/{{ it.id }}" style="flex:1;background:#1e3a5f;color:#6c8cff;padding:8px;border-radius:8px;font-size:11px;font-weight:800;text-align:center;text-decoration:none">EDIT</a>
-<a href="/delete/{{ it.id }}" style="flex:1;background:#4a1a2a;color:#ff5a7a;padding:8px;border-radius:8px;font-size:11px;font-weight:800;text-align:center;text-decoration:none">DELETE</a>
-</div>
-</div>
-{% endfor %}
-</div>
-{% if not items %}<div style="text-align:center;padding:30px;color:#555">No {{ f_type }} items found!</div>{% endif %}
-{% endif %}
+@app.route('/')
+def home():
+    q = request.args.get('q', '')
+    f_type = request.args.get('type', 'All')
+    matched_title = request.args.get('matched_title', '')
+    matched_contact = request.args.get('matched_contact', '')
+    matched_location = request.args.get('matched_location', '')
+    matched_email = request.args.get('matched_email', '')
+    matched_insta = request.args.get('matched_insta', '')
+    items = get_items(f_type, q)
+    all_items = get_items()
+    total = len(all_items)
+    lost = len([i for i in all_items if i['type'] == 'Lost'])
+    found = len([i for i in all_items if i['type'] == 'Found'])
+    rate = int((found/total*100) if total>0 else 78)
+    return render_template('index.html', items=items, total=total, lost=lost, found=found, rate=rate, q=q, f_type=f_type,
+                           matched_title=matched_title, matched_contact=matched_contact, matched_location=matched_location,
+                           matched_email=matched_email, matched_insta=matched_insta)
 
-{% if f_type == 'Post' %}
-<div class="form-card" style="margin-top:30px">
-<h4 style="color:#fff;margin-bottom:14px;letter-spacing:0.1em">POST NEW ITEM</h4>
-<form action="/add" method="post" enctype="multipart/form-data">
-<input name="title" placeholder="Item Title - ex: Black Wallet" required>
-<select name="type" required><option value="Lost">🔴 Lost Item</option><option value="Found">🟢 Found Item</option></select>
-<input name="location" placeholder="Location - ex: Library, Canteen" required>
-<input name="contact" placeholder="Contact - ex: 7975165725" required>
-<input type="file" name="image">
-<button class="btn" style="width:100%;margin-top:12px;padding:16px;font-size:14px" type="submit">POST ITEM NOW</button>
-</form>
-</div>
-{% endif %}
+@app.route('/add', methods=['POST'])
+def add_item():
+    title = request.form.get('title')
+    itype = request.form.get('type')
+    location = request.form.get('location')
+    contact = request.form.get('contact')
+    email = request.form.get('email','')
+    instagram = request.form.get('instagram','')
+    image = request.files.get('image')
+    filename = ""
+    if image and image.filename != "":
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(UPLOAD_FOLDER, filename))
+    
+    match = find_match(title, itype)
 
-</div>
-<script>
-const params = new URLSearchParams(window.location.search);
-const t = params.get('type');
-document.querySelectorAll('.menu li').forEach(e=>e.classList.remove('active'));
-if(t==='Lost') document.getElementById('m2').classList.add('active');
-else if(t==='Found') document.getElementById('m3').classList.add('active');
-else if(t==='Post') document.getElementById('m4').classList.add('active');
-else document.getElementById('m1').classList.add('active');
-</script>
-</body>
-</html>
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO items (title,type,location,contact,image,email,instagram) VALUES (?,?,?,?,?,?,?)", 
+              (title, itype, location, contact, filename, email, instagram))
+    conn.commit()
+    conn.close()
+
+    if match:
+        return redirect(f"/?matched_title={match['title']}&matched_contact={match['contact']}&matched_location={match['location']}&matched_email={match['email'] or ''}&matched_insta={match['instagram'] or ''}&type=Post")
+    return redirect('/')
+
+@app.route('/delete/<int:item_id>')
+def delete_item(item_id):
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM items WHERE id=?", (item_id,))
+    conn.commit()
+    conn.close()
+    return redirect('/')
+
+@app.route('/edit/<int:item_id>')
+def edit_page(item_id):
+    conn = sqlite3.connect('findit.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT * FROM items WHERE id=?", (item_id,))
+    item = c.fetchone()
+    conn.close()
+    return render_template('edit.html', item=item)
+
+@app.route('/update/<int:item_id>', methods=['POST'])
+def update_item(item_id):
+    title = request.form.get('title')
+    itype = request.form.get('type')
+    location = request.form.get('location')
+    contact = request.form.get('contact')
+    email = request.form.get('email','')
+    instagram = request.form.get('instagram','')
+    image = request.files.get('image')
+    conn = sqlite3.connect('findit.db')
+    c = conn.cursor()
+    if image and image.filename != "":
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(UPLOAD_FOLDER, filename))
+        c.execute("UPDATE items SET title=?, type=?, location=?, contact=?, image=?, email=?, instagram=? WHERE id=?", (title, itype, location, contact, filename, email, instagram, item_id))
+    else:
+        c.execute("UPDATE items SET title=?, type=?, location=?, contact=?, email=?, instagram=? WHERE id=?", (title, itype, location, contact, email, instagram, item_id))
+    conn.commit()
+    conn.close()
+    return redirect('/')
+
+if __name__ == '__main__':
+    app.run(debug=True)
