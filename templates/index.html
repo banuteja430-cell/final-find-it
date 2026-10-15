@@ -73,31 +73,18 @@ body{background:#0a0e18;color:#cdd6e0;font-family:Arial;display:flex;min-height:
 {% endfor %}
 </div>
 {% if not items %}<div style="text-align:center;padding:30px;color:#555">No {{ f_type }} items found!</div>{% endif %}
-
 {% endif %}
 
 {% if f_type == 'Post' %}
-<div class="form-card" style="margin-top:20px">
+<div class="form-card" style="margin-top:30px">
 <h4 style="color:#fff;margin-bottom:14px;letter-spacing:0.1em">POST NEW ITEM</h4>
 <form action="/add" method="post" enctype="multipart/form-data">
-<input name="title" placeholder="Item Title" required>
+<input name="title" placeholder="Item Title - ex: Black Wallet" required>
 <select name="type" required><option value="Lost">🔴 Lost Item</option><option value="Found">🟢 Found Item</option></select>
-<input name="location" placeholder="Location" required>
-<input name="contact" placeholder="Contact" required>
+<input name="location" placeholder="Location - ex: Library, Canteen" required>
+<input name="contact" placeholder="Contact - ex: 7975165725" required>
 <input type="file" name="image">
-<button class="btn" style="width:100%;margin-top:12px;padding:14px" type="submit">POST ITEM NOW</button>
-</form>
-</div>
-{% else %}
-<div id="post" class="form-card">
-<h4 style="color:#fff;margin-bottom:14px">POST NEW ITEM</h4>
-<form action="/add" method="post" enctype="multipart/form-data">
-<input name="title" placeholder="Item Title" required>
-<select name="type" required><option value="Lost">Lost</option><option value="Found">Found</option></select>
-<input name="location" placeholder="Location" required>
-<input name="contact" placeholder="Contact" required>
-<input type="file" name="image">
-<button class="btn" style="width:100%;margin-top:12px;padding:14px" type="submit">POST ITEM</button>
+<button class="btn" style="width:100%;margin-top:12px;padding:16px;font-size:14px" type="submit">POST ITEM NOW</button>
 </form>
 </div>
 {% endif %}
