@@ -29,7 +29,16 @@ body{background:#0a0e18;color:#cdd6e0;font-family:Arial;display:flex;min-height:
 .form-card input,.form-card select{width:100%;margin:7px 0;padding:12px;background:#0a0e18;border:1px solid #242d46;border-radius:10px;color:#fff}
 .btn{padding:10px 18px;background:#2b90ff;color:#fff;border-radius:10px;border:none;font-size:12px;font-weight:800;cursor:pointer}
 .select,.search{background:#0a0e18;border:1px solid #242d46;border-radius:8px;color:#fff;padding:8px 12px;font-size:12px}
+.match-banner{background:linear-gradient(90deg,#00ff88,#2b90ff);color:#000;padding:14px;border-radius:12px;font-weight:900;text-align:center;margin-bottom:20px;animation:blink 1s infinite}
+@keyframes blink{0%{opacity:1}50%{opacity:0.7}100%{opacity:1}}
 </style>
+{% if matched_title %}
+<script>
+window.onload = function(){
+ alert("🎉 MATCH FOUND!\n\nNuvvu post chesina item ki match dorikindi!\n\nItem: {{ matched_title }}\nLocation: {{ matched_location }}\nContact: {{ matched_contact }}\n\nVere vallani contact chey bro!");
+}
+</script>
+{% endif %}
 </head>
 <body>
 <div class="sidebar">
@@ -43,6 +52,10 @@ body{background:#0a0e18;color:#cdd6e0;font-family:Arial;display:flex;min-height:
 </div>
 <div class="main">
 <div class="title">Campus Recovery Hub</div>
+
+{% if matched_title %}
+<div class="match-banner">🎉 MATCH FOUND! Item: {{ matched_title }} | Contact: {{ matched_contact }} | Location: {{ matched_location }}</div>
+{% endif %}
 
 {% if f_type != 'Post' %}
 <div style="display:flex;gap:8px;margin:20px 0">
