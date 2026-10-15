@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request, redirect
-import os
-import sqlite3
+import os, sqlite3
 from werkzeug.utils import secure_filename
-
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -10,11 +8,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def init_db():
     conn = sqlite3.connect('findit.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS items 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, location TEXT, contact TEXT, image TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, location TEXT, contact TEXT, image TEXT)''')
     conn.commit()
     conn.close()
-
 init_db()
 
 def get_items(filter_type='All', search=''):
